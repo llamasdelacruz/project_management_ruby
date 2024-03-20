@@ -13,6 +13,7 @@ class AdminInterface
     @root.protocol('WM_DELETE_WINDOW') { cerrar_ventana }
 
     @botones_eliminar = {}
+   
     
 
     # Colores
@@ -96,29 +97,31 @@ class AdminInterface
     prioridad = @prioridad_combo.get
     responsable = @estado.get
 
+
     # Agregar la actividad a la lista de actividades
+ 
    
     @bd_insta = Base_datos_m.new
     @id = @bd_insta.insertar(nombre, prioridad, responsable)
     # Actualizar la tabla
-    @eliminar = TkButton.new(@tabla) do
-      text "Eliminar"
-      grid(column: 3, row: @id.to_i)
-    end
-    @eliminar.command = Proc.new {eliminar_actividad(@id.to_i) }
-    @botones_eliminar.store(@id, @eliminar)
-    row = @tabla.insert('', 'end', text: @id ,values: [@id,nombre, prioridad, responsable])
+    @actividad_entry.delete(0, "end")
 
-    # Agregar un botón de eliminar a la fila
-    
-  
+    @botones_eliminar.each do |key, value|
+      value.destroy() 
+    end
+   
+    @tabla.delete(@tabla.children(''))
+
+    mostrar_actividades
   end
 
   def mostrar_actividades
+    
     @base = Base_datos_m.new
         datos = @base.mostrar
         @tabla.insert('', 'end', values: ["ID","Nombre", "Prioridad", "Estado"])
         datos.each do |id,nombre, prioridad, estado|
+        
            @eliminar = TkButton.new(@tabla) do
               text "Eliminar"
               grid(column: 3, row: id.to_i)
