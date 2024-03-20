@@ -1,4 +1,6 @@
 require_relative 'ventanas/ventana_admin.rb'
+require_relative 'ventanas/ventana_usua.rb'
+require_relative 'ventanas/base_datos.rb'
 require 'tk'
 
 class LoginInterface
@@ -75,11 +77,18 @@ class LoginInterface
   end
 
   def login
+    @bd_insta = Base_datos_m.new
     # Aquí puedes agregar la lógica de inicio de sesión
-    if @username_entry.get == "a" && @password_entry.get == "a"
+    if @bd_insta.login_comparacion(@username_entry.get,@password_entry.get)
       
-      @root.withdraw()
-      AdminInterface.new(@root)
+      if @bd_insta.recuperar_tipo_usuario(@username_entry.get) == 1
+        @root.withdraw()
+        AdminInterface.new(@root)
+      else  
+        @root.withdraw()
+        UsuaInterface.new(@root)
+      end
+      
       
     else
       Tk.messageBox(title: "Mensaje", message: "Inicio de sesión fallido")

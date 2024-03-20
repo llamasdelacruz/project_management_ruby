@@ -1,2 +1,1 @@
-AdminInterface.new
-      @root.destroy
+ventanas/base_datos.rb
