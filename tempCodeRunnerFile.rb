@@ -1,0 +1,2 @@
+AdminInterface.new
+      @root.destroy
