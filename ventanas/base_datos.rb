@@ -10,6 +10,11 @@ class Base_datos_m
         begin
             @db = SQLite3::Database.new "projects.db"
             @db.execute "INSERT INTO task(nombre, prioridad, estado) VALUES('#{nombre}', '#{prioridad}', '#{estado}')"
+
+            @db.execute "SELECT id FROM task ORDER BY id DESC LIMIT 1" do |row|
+                id = row
+                return id
+            end
         rescue SQLite3::Exception => e
             puts "Exception occurred"
             puts e
@@ -63,5 +68,16 @@ class Base_datos_m
         end
     end
 
+    def eliminar_actividad(id)
+        begin
+            @db = SQLite3::Database.new "projects.db"
+            @db.execute "DELETE FROM task WHERE id = '#{id}'"
+        rescue SQLite3::Exception => e
+            puts "Exception occurred"
+            puts e
+        ensure
+            @db.close if @db
+        end
+    end
 end
 

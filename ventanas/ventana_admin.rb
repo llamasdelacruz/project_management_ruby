@@ -11,6 +11,8 @@ class AdminInterface
         geometry "600x400"
     end
     @root.protocol('WM_DELETE_WINDOW') { cerrar_ventana }
+
+    @botones_eliminar = {}
     
 
     # Colores
@@ -61,11 +63,11 @@ class AdminInterface
       pack(pady: 5)
     end
 
-    @responsable_combo = Tk::Tile::Combobox.new(@main_frame) do
-      values ['Juan', 'María', 'Pedro']
+    @estado = Tk::Tile::Combobox.new(@main_frame) do
+      values ['Pendiente', 'En proceso', 'Terminada']
       pack(pady: 5)
     end
-    @responsable_combo.current()
+    @estado.current()
 
     # Botón Agregar
     @agregar = TkButton.new(@main_frame) do
@@ -81,58 +83,73 @@ class AdminInterface
 
     # Tabla de actividades
     @tabla = Tk::Tile::Treeview.new(@main_frame) do
-      columns ['Nombre', 'Prioridad', 'Responsable', 'Eliminar']
+      columns ["ID",'Nombre', 'Prioridad', 'Responsable', 'Eliminar']
       pack(fill: :both, expand: true)
     end
+
+    mostrar_actividades
   end
 
   def agregar_actividad
+
     nombre = @actividad_entry.get
     prioridad = @prioridad_combo.get
-    responsable = @responsable_combo.get
+    responsable = @estado.get
 
     # Agregar la actividad a la lista de actividades
-    @actividades << { nombre: nombre, prioridad: prioridad, responsable: responsable }
-    # @bd_insta = Base_datos_m.new
-    # @bd_insta.insertar(nombre, prioridad, responsable)
+   
+    @bd_insta = Base_datos_m.new
+    @id = @bd_insta.insertar(nombre, prioridad, responsable)
     # Actualizar la tabla
-    actualizar_tabla
+    @eliminar = TkButton.new(@tabla) do
+      text "Eliminar"
+      grid(column: 3, row: @id.to_i)
+    end
+    @eliminar.command = Proc.new {eliminar_actividad(@id.to_i) }
+    @botones_eliminar.store(@id, @eliminar)
+    row = @tabla.insert('', 'end', text: @id ,values: [@id,nombre, prioridad, responsable])
+
+    # Agregar un botón de eliminar a la fila
+    
+  
   end
 
-  def actualizar_tabla
-    # Limpiar la tabla
-    # @tabla.delete(*@tabla.children)
+  def mostrar_actividades
+    @base = Base_datos_m.new
+        datos = @base.mostrar
+        @tabla.insert('', 'end', values: ["ID","Nombre", "Prioridad", "Estado"])
+        datos.each do |id,nombre, prioridad, estado|
+           @eliminar = TkButton.new(@tabla) do
+              text "Eliminar"
+              grid(column: 3, row: id.to_i)
+            end
+            @eliminar.command = Proc.new { eliminar_actividad(id.to_i) }
+
+            @botones_eliminar.store(id, @eliminar)
+          row = @tabla.insert('', 'end', text: id,values: [id,nombre, prioridad, estado])
+           
+        end
 
     
-    if !@tabla.children('')
-      @tabla.delete(*@tabla.children(''))
-    end
-
-    # Re-construir la tabla con los datos actualizados
-    @actividades.each_with_index do |actividad, index|
-      nombre = actividad[:nombre]
-      prioridad = actividad[:prioridad]
-      responsable = actividad[:responsable]
-
-      # Añadir la fila a la tabla
-      id = @tabla.insert('', 'end', text: index, values: [nombre, prioridad, responsable])
-
-      # Agregar un botón de eliminar a la fila
-      @eliminar = TkButton.new(@tabla) do
-        text "Eliminar"
-        grid(column: 3, row: index)
-      end
-      @eliminar.command = Proc.new { eliminar_actividad(id) }
-    end
+  
     
   end
 
   def eliminar_actividad(id)
     # Eliminar la actividad de la lista de actividades
     @actividades.delete(id)
+    @base = Base_datos_m.new
+    @base.eliminar_actividad(id)
+    @botones_eliminar.each do |key, value|
+      value.destroy() 
+    end
+   
+    @tabla.delete(@tabla.children(''))
+
+    mostrar_actividades
+    
     
     # Actualizar la tabla
-    actualizar_tabla
   end
 
   def cerrar_ventana
